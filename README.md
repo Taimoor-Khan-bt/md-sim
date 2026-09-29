@@ -55,7 +55,8 @@ The workflow is:
 5. Build independent solvated replicas with GROMACS.
 6. Run energy minimization, NVT equilibration, NPT equilibration, and production MD.
 7. Correct periodic boundaries and fit trajectories for analysis.
-8. Compare replica-level RMSD, RMSF, and mutation-neighborhood behavior with summary statistics.
+8. Compare replica-level RMSD, RMSF, SASA, radius of gyration, and mutation-neighborhood behavior with summary statistics.
+9. Optionally calculate mutation-neighborhood contact occupancy when a validated biological assembly is configured.
 
 ## Main Configuration
 
@@ -72,7 +73,9 @@ FORCE_FIELD = "charmm36m"
 WATER_MODEL = "tip3p"
 ```
 
-Use at least three independent replicas for comparative analysis. Increase the number or duration when the relevant conformational process is slow.
+Use at least three independent replicas for comparative analysis. The default 100 ns run is exploratory. Set `SIMULATION_TIME_NS = 1000` for a paper-comparable 1 microsecond production campaign after validating a short test run.
+
+For oligomeric systems, provide `BIOLOGICAL_ASSEMBLY_FILE` and `OLIGOMER_CHAINS`. Contact analysis uses a configurable 5 Å residue-center cutoff and writes replica-level occupancy tables.
 
 ## Biological Components
 
@@ -90,9 +93,9 @@ For membrane systems, use a validated membrane builder such as CHARMM-GUI with a
 
 ## Interpretation
 
-The notebook calculates structural ensemble descriptors with replica-level variability. Do not interpret a difference in RMSD, RMSF, SASA, or radius of gyration as a folding or binding free-energy change.
+The notebook calculates structural ensemble descriptors with replica-level variability. Do not interpret a difference in RMSD, RMSF, SASA, radius of gyration, or contact occupancy as a folding or binding free-energy change.
 
-For mutation stability or binding effects, use a separate validated alchemical workflow such as FEP, TI, BAR/MBAR, or pmx. Folding stability requires an appropriate folded/unfolded thermodynamic cycle; binding requires both apo and complex legs.
+For mutation stability or binding effects, use a separate validated alchemical workflow such as FEP, TI, BAR/MBAR, or pmx. Folding stability requires an appropriate folded/unfolded thermodynamic cycle; binding requires both apo and complex legs. MM/GBSA is not implemented in the notebook and should only be added as an explicitly validated comparative screening step.
 
 ## Reproducibility
 
