@@ -1,0 +1,54 @@
+; ============================================================
+; GROMACS MDP - NPT Equilibration (Pressure)
+; ============================================================
+integrator   = md
+dt           = 0.002
+nsteps       = 50000         ; 100 ps
+
+; Output
+nstxout-compressed  = 500
+nstlog              = 500
+nstenergy           = 500
+nstcomm             = 100
+
+; Bonds
+constraints          = h-bonds
+constraint-algorithm = LINCS
+lincs-iter           = 1
+lincs-order          = 4
+
+; Neighbor searching
+cutoff-scheme   = Verlet
+ns_type         = grid
+nstlist         = 20
+rcoulomb        = 1.2
+rvdw            = 1.2
+DispCorr        = EnerPres
+
+; Electrostatics
+coulombtype     = PME
+pme-order       = 4
+fourierspacing  = 0.16
+
+; Temperature coupling
+tcoupl          = V-rescale
+tc-grps         = Protein Non-Protein
+tau_t           = 0.1   0.1
+ref_t           = 300   300
+
+; Pressure coupling ON for NPT
+pcoupl          = C-rescale
+pcoupltype      = isotropic
+tau_p           = 2.0
+ref_p           = 1.0
+compressibility = 4.5e-5
+refcoord-scaling = com
+
+; Position restraints
+define = -DPOSRES
+
+; No initial velocities (continuing from NVT)
+gen_vel         = no
+
+; Periodic boundary conditions
+pbc             = xyz

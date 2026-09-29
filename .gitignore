@@ -1,0 +1,12 @@
+.agents/
+.ipynb_checkpoints/
+results/
+uploads/
+*.tgz
+__pycache__/
+*.pyc
+*.gro
+*.itp
+*.top
+*.pdb
+\#*\#

@@ -1,0 +1,57 @@
+name: md-sim
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Core Python
+  - python=3.11
+  - pip
+
+  # MD Simulation Engines
+  - "gromacs=*=*cuda*"    # Force CUDA-accelerated GROMACS (OpenCL fallback fails)
+  - openmm>=8.1           # Python-native GPU-accelerated MD
+
+  # Structure preparation & force fields
+  - ambertools>=23        # tleap, antechamber, parmchk2
+  - parmed                # cross-engine parameter files
+  - pdbfixer              # PDB structure cleanup
+  - openmmforcefields     # Extra force fields (GAFF, SMIRNOFF) — conda-forge version
+  - openff-toolkit        # OpenForceField toolkit — conda-forge version
+
+  # Analysis
+  - mdanalysis>=2.7
+  - mdtraj>=1.9
+  - prolif                # Protein-Ligand Interaction Fingerprints (conda-forge)
+  - numpy
+  - scipy
+  - pandas
+
+  # Visualization
+  - nglview>=3.1          # 3D interactive molecular viewer
+  - matplotlib
+  - seaborn
+
+  # Streamlit UI & web
+  - streamlit>=1.35
+  - plotly>=5.22
+  - altair
+
+  # Jupyter (optional, for interactive analysis)
+  - jupyterlab
+  - ipywidgets
+  - ipykernel
+
+  # Utilities
+  - biopython
+  - gemmi                 # CIF/mmCIF/PDB parser
+  - psutil                # System stats (RAM/CPU for home page)
+  - requests
+  - tqdm
+  - pyyaml
+  - toml
+
+  # Pip-only packages (confirmed installable)
+  - pip:
+    - py3dmol             # 3D viewer widget
+    - stmol               # Streamlit + 3DMol viewer

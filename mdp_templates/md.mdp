@@ -1,0 +1,59 @@
+; ============================================================
+; GROMACS MDP - Production MD Run
+; ============================================================
+integrator   = md
+dt           = 0.002
+nsteps       = 5000000       ; 10 ns  (change as needed)
+
+; Output
+nstxout-compressed  = 5000   ; every 10 ps
+nstlog              = 5000
+nstenergy           = 5000
+nstcomm             = 100
+
+; Bonds
+constraints          = h-bonds
+constraint-algorithm = LINCS
+lincs-iter           = 1
+lincs-order          = 4
+
+; Neighbor searching
+cutoff-scheme   = Verlet
+ns_type         = grid
+nstlist         = 20
+rcoulomb        = 1.2
+rvdw            = 1.2
+DispCorr        = EnerPres
+
+; Electrostatics
+coulombtype     = PME
+pme-order       = 4
+fourierspacing  = 0.16
+
+; Temperature coupling
+tcoupl          = V-rescale
+tc-grps         = Protein Non-Protein
+tau_t           = 0.1   0.1
+ref_t           = 300   300
+
+; Pressure coupling
+pcoupl          = C-rescale
+pcoupltype      = isotropic
+tau_p           = 2.0
+ref_p           = 1.0
+compressibility = 4.5e-5
+refcoord-scaling = com
+
+; No position restraints, no initial velocities
+define          =
+gen_vel         = no
+
+; Periodic boundary conditions
+pbc             = xyz
+
+; COM motion removal
+comm-mode       = Linear
+
+; GPU offloading hints (GROMACS auto-detects, but explicit here)
+; nb              = gpu
+; pme             = gpu
