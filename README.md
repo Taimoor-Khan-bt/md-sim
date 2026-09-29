@@ -1,139 +1,114 @@
-# MD Simulation Platform
+# Mutation-Impact Molecular Dynamics
 
-GPU-accelerated molecular dynamics simulation environment for mutant protein models.
+This repository contains a Jupyter notebook for replica-based molecular dynamics simulations comparing a wild-type protein with a specified mutant.
 
-## System Requirements (Detected)
-- **GPU:** NVIDIA GeForce RTX 3090 (24 GB VRAM, CUDA 13.2)
-- **CPU:** Intel Core i7-11700 @ 2.50GHz (16 cores)
-- **RAM:** 62 GB
+The current notebook implements a guarded workflow for **soluble proteins** using GROMACS, PDBFixer, MDAnalysis, and a CHARMM36m/TIP3P-style setup. It reports structural ensemble differences; RMSD, RMSF, SASA, and radius of gyration are not free-energy estimates.
 
----
+## Contents
 
-## Quick Start
-
-### 1. Create the environment & launch UI
-```bash
-cd /home/kmu/Taimoor/Genomics/research_bioinformatics/md-simulation
-./launch.sh
+```text
+md-simulation/
+├── MD_simulation_pipeline.ipynb  # Main workflow
+├── MD_Simulation_Guide.pdf       # Extended methodology guide
+├── environment.yml               # Conda/mamba environment
+├── mdp_templates/                # EM, NVT, NPT, and production settings
+├── uploads/                      # Input structures
+└── results/                      # Generated trajectories and analyses
 ```
-Then open **http://localhost:8501** in your browser.
 
-### 2. Manual environment setup (if needed)
+## Requirements
+
+- Linux or another environment with a working GROMACS installation
+- Python 3 with the packages in `environment.yml`
+- NVIDIA GPU is optional but recommended for production runs
+- A prepared PDB structure with a known biological assembly and chain numbering
+
+Create the environment:
+
 ```bash
 mamba env create -f environment.yml -n md-sim
-conda activate md-sim
-streamlit run app/main.py
+mamba activate md-sim
 ```
 
----
-
-## Project Structure
-
-```
-md-simulation/
-├── environment.yml          # Mamba environment (GROMACS, OpenMM, MDAnalysis, Streamlit…)
-├── launch.sh                # One-command launcher
-├── app/
-│   ├── main.py              # Streamlit entry point + navigation
-│   └── pages/
-│       ├── page_home.py         # Dashboard & system info
-│       ├── page_upload.py       # PDB upload & management
-│       ├── page_configure.py    # Force field, box, MD parameters
-│       ├── page_run.py          # Launch simulation + live logs
-│       ├── page_analysis.py     # RMSD, RMSF, Rg, H-bonds, DSSP, energy
-│       ├── page_visualization.py# Interactive 3D viewer (py3Dmol)
-│       └── page_results.py      # Browse, download, compare, delete runs
-├── scripts/
-│   ├── gmx_runner.py        # GROMACS pipeline (pdb2gmx→EM→NVT→NPT→MD)
-│   └── analysis.py          # MDAnalysis + MDTraj analysis functions
-├── mdp_templates/
-│   ├── em.mdp               # Energy minimization
-│   ├── nvt.mdp              # NVT equilibration
-│   ├── npt.mdp              # NPT equilibration
-│   └── md.mdp               # Production MD (10 ns default)
-├── uploads/                 # Uploaded PDB files
-├── results/                 # Simulation output directories
-└── logs/                    # Log files
-```
-
----
-
-## Simulation Pipeline
-
-```
-Upload PDB → pdb2gmx → editconf → solvate → genion
-           → Energy Minimization (EM)
-           → NVT Equilibration (100 ps)
-           → NPT Equilibration (100 ps)
-           → Production MD (10 ns default, configurable)
-           → Analysis (RMSD, RMSF, Rg, H-bonds, DSSP, Energy)
-```
-
-All steps run GPU-accelerated via GROMACS with:
-- `-nb gpu` — non-bonded on GPU
-- `-pme gpu` — PME electrostatics on GPU
-- `-bonded gpu` — bonded forces on GPU
-- `-update gpu` — coordinate update on GPU
-
----
-
-## Key Tools Installed
-
-| Tool | Purpose |
-|------|---------|
-| GROMACS 2024 | Main MD engine (GPU) |
-| OpenMM ≥8.1 | Python-native GPU MD |
-| AmberTools | tleap, antechamber (ligand params) |
-| MDAnalysis | Trajectory analysis |
-| MDTraj | Fast trajectory analysis + DSSP |
-| NGLView | Interactive 3D viewer |
-| Streamlit | Web UI |
-| Plotly | Interactive graphs |
-
----
-
-## Force Fields Available
-
-- `charmm36m` — Best for proteins, membranes (default)
-- `amber99sb-ildn` — Widely used for proteins
-- `amber14sb` — Latest AMBER protein FF
-- `gromos54a7` — United-atom
-- `oplsaa` — All-atom, good for organic molecules
-
----
-
-## Running Multiple Mutants
-
-Each simulation run is stored in `results/<job_name>_<timestamp>/`. Use the **Results Browser** page to compare RMSD curves across mutants side-by-side.
-
----
-
-## Manual GROMACS Commands
+Verify the GROMACS installation:
 
 ```bash
-conda activate md-sim
-
-# Check GROMACS installation
 gmx --version
-
-# Run pipeline manually
-python scripts/gmx_runner.py
-
-# Extract energy data
-gmx energy -f results/<run>/md.edr -o energy.xvg
-
-# Convert trajectory to PDB
-gmx trjconv -f results/<run>/md.xtc -s results/<run>/md.tpr \
-            -o results/<run>/traj.pdb -pbc mol -ur compact
 ```
 
----
+## Run the Notebook
 
-## Troubleshooting
+Start Jupyter from the repository root:
 
-| Issue | Fix |
-|-------|-----|
-| GROMACS not found | `conda activate md-sim` |
-| GPU out of memory | Reduce box size or use `-gpu_id ""` for CPU |
-| pdb2gmx fails | Check PDB for missing atoms, use `-ignh` to rebuild H |
-| Pressure coupling error | Ensure NVT ran to completion before NPT |
+```bash
+jupyter lab
+```
+
+Open `MD_simulation_pipeline.ipynb` and execute the cells in order.
+
+The workflow is:
+
+1. Configure the input PDB, mutation, force field, temperature, salt concentration, and replica count.
+2. Validate the target chain, residue number, and wild-type residue identity.
+3. Prepare WT and mutant structures with PDBFixer.
+4. Retain biological heterogens by default.
+5. Build independent solvated replicas with GROMACS.
+6. Run energy minimization, NVT equilibration, NPT equilibration, and production MD.
+7. Correct periodic boundaries and fit trajectories for analysis.
+8. Compare replica-level RMSD, RMSF, and mutation-neighborhood behavior with summary statistics.
+
+## Main Configuration
+
+The configuration cell defines values such as:
+
+```python
+PDB_FILE = "uploads/ppox/3NKS_WT.pdb"
+SYSTEM_TYPE = "soluble"
+TARGET_CHAIN_ID = "A"
+MUTATION_STR = "ALA-449-THR"
+N_REPLICAS = 3
+SIMULATION_TIME_NS = 100
+FORCE_FIELD = "charmm36m"
+WATER_MODEL = "tip3p"
+```
+
+Use at least three independent replicas for comparative analysis. Increase the number or duration when the relevant conformational process is slow.
+
+## Biological Components
+
+Heterogens are not removed automatically. Review and parameterize every retained ligand, cofactor, metal, structural water, partner protein, or nucleic acid before production.
+
+The generic notebook branch intentionally stops for:
+
+- Membrane proteins
+- Ligand-bound systems
+- Metal- or cofactor-dependent systems
+- Protein complexes
+- Systems requiring substantial disorder or loop remodeling
+
+For membrane systems, use a validated membrane builder such as CHARMM-GUI with appropriate lipid composition, orientation, hydration, and semi-isotropic pressure coupling. For ligands, cofactors, and metals, use validated parameters and document protonation, charge, oxidation, and coordination choices.
+
+## Interpretation
+
+The notebook calculates structural ensemble descriptors with replica-level variability. Do not interpret a difference in RMSD, RMSF, SASA, or radius of gyration as a folding or binding free-energy change.
+
+For mutation stability or binding effects, use a separate validated alchemical workflow such as FEP, TI, BAR/MBAR, or pmx. Folding stability requires an appropriate folded/unfolded thermodynamic cycle; binding requires both apo and complex legs.
+
+## Reproducibility
+
+Record the following with each study:
+
+- Input structure and biological assembly
+- Chain and residue numbering
+- Protonation and pH assumptions
+- Force-field and GROMACS versions
+- Ligand, cofactor, and metal parameter sources
+- Replica seeds and simulation lengths
+- All `grompp` warnings and their disposition
+- Equilibration and convergence diagnostics
+
+Generated trajectories and energy files can be large. Check `.gitignore` before committing simulation output.
+
+## Additional Documentation
+
+See [MD_Simulation_Guide.pdf](MD_Simulation_Guide.pdf) for the extended methodology and [MD_simulation_pipeline.ipynb](MD_simulation_pipeline.ipynb) for the executable workflow.
